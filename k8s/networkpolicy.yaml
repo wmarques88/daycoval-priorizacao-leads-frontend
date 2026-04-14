@@ -1,0 +1,36 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-policy
+  namespace: leads-prod
+  labels:
+    app.kubernetes.io/managed-by: github-actions
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Permite tráfego externo (LoadBalancer / usuários finais) na porta do nginx
+    - ports:
+        - port: 80
+  egress:
+    # Só pode chamar o backend na porta 8000
+    - to:
+        - podSelector:
+            matchLabels:
+              app: backend
+      ports:
+        - port: 8000
+    # DNS — necessário para resolver nomes de serviço internos
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
